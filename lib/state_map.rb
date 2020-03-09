@@ -1,6 +1,6 @@
 require_relative 'pstore_connection'
 
-module StateMap # Small db, will only ever be one
+module StateMap # Small db, will only ever be one for a very long time
   MAX_DATA_STORE_SIZE = 10000000 # bytes
 
   class << self
