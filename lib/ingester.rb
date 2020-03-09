@@ -1,6 +1,7 @@
 require_relative 'data_store'
 require_relative 'state_map'
 require_relative 'uniq_store'
+require 'csv'
 
 module Ingester
   class << self
@@ -13,6 +14,12 @@ module Ingester
       end
 
       UniqStore.upsert(row: row, new_id: id_to_upsert)
+    end
+
+    def ingest(file_path)
+      CSV.foreach(file_path, headers: true, col_sep: "|") do |row|
+        upsert_row(row)
+      end
     end
   end
 end

@@ -1,0 +1,9 @@
+STB|TITLE|PROVIDER|DATE|REV|VIEW_TIME
+stb1|the matrix|warner bros|2014-04-01|4.00|1:30
+stb1|unbreakable|buena vista|2014-04-03|6.00|2:05
+stb2|the hobbit|warner bros|2014-04-02|8.00|2:45
+stb3|the matrix|warner bros|2014-04-02|4.00|1:05
+stb3|dupe one|warner bros|2014-04-02|4.00|1:05
+stb3|dupe one|warner bros|2014-04-02|4.44|1:11
+stb1|not a dupe|warner bros|2014-04-02|1.11|2:22
+stb1|not a dupe|warner bros|1066-10-14|1.11|2:22

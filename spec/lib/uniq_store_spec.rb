@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'uniq_store'
-require 'CSV'
 
 describe UniqStore do
   let(:connection) { UniqStore.connection(test_path) }
