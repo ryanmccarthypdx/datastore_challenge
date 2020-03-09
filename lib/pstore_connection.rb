@@ -1,0 +1,3 @@
+class PstoreConnection
+
+end
