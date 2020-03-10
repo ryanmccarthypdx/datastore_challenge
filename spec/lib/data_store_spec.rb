@@ -14,13 +14,20 @@ describe DataStore do
   end
 
   describe '.create_new_record_from_row' do
-    before { allow(StateMap).to receive(:data_store_for_new_record).with(test_id).and_return(test_path) }
+    let(:expected_values) { ['test_value_1', 'test_value_2'] }
+    before do
+      allow(StateMap).to receive(:data_store_for_new_record).with(test_id).and_return(test_path)
+    end
 
     it 'sets an entry with id as key and the values from the row as values, ordered correctly' do
       DataStore.create_new_record_from_row(id: test_id, row: test_row)
-      expected_value = ['test_value_1', 'test_value_2']
-      expect(connection.get(test_id)).to eq(expected_value)
-      expect(connection.get(test_id)).not_to eq(expected_value.reverse)
+      expect(connection.get(test_id)).to eq(expected_values)
+      expect(connection.get(test_id)).not_to eq(expected_values.reverse)
+    end
+
+    it 'indexes the row' do
+      expect(Indexer).to receive(:index_row).with(id: test_id, row: expected_values)
+      DataStore.create_new_record_from_row(id: test_id, row: test_row)
     end
   end
 
@@ -29,12 +36,18 @@ describe DataStore do
     before do
       allow(StateMap).to receive(:find_data_store_by_id).with(test_id).and_return(test_path)
       connection.set(test_id, test_entry)
+      allow(Indexer).to receive(:deindex).with(data: test_entry, id: test_id)
     end
 
     it 'deletes the id' do
       expect(connection.get(test_id)).to eq(test_entry) # confirm validity of test
       DataStore.delete(test_id)
       expect(connection.get(test_id)).to be_nil
+    end
+
+    it 'deindexes the data' do
+      DataStore.delete(test_id)
+      expect(Indexer).to have_received(:deindex).with(data: test_entry, id: test_id)
     end
   end
 end

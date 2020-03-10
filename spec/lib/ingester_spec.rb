@@ -66,12 +66,18 @@ describe Ingester do
       before { Ingester.ingest('./spec/support/ingester_acceptance_test.psv') }
 
       context 'first time it is run on a file' do
-        it 'creates the dbs as-expected' do
+        it 'creates the dbs and indices as-expected' do
           expect(Dir['./data/test/**/*.pstore']).to contain_exactly(
             "./data/test/uniq_store_1066.pstore",
             "./data/test/data_store_0.pstore",
             "./data/test/uniq_store_2014.pstore",
-            "./data/test/state_map.pstore")
+            "./data/test/state_map.pstore",
+            "./data/test/indices/DATE.pstore",
+            "./data/test/indices/PROVIDER.pstore",
+            "./data/test/indices/REV.pstore",
+            "./data/test/indices/STB.pstore",
+            "./data/test/indices/TITLE.pstore",
+            "./data/test/indices/VIEW_TIME.pstore")
         end
 
         it 'populates the state_map as-expected' do
@@ -97,17 +103,32 @@ describe Ingester do
           )
           expect(uniq_store_connection.get("2014-04-02.stb3.dupe one")).to eq(6) # and not 5
         end
+
+        it 'populates the indices as-expected' do
+          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].keys)
+            .to contain_exactly("the matrix",
+                                "unbreakable",
+                                "the hobbit",
+                                "dupe one",
+                                "not a dupe")
+          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(7,8)
+        end
       end
 
       context 'when run a second time' do
-        it 'does not create any new databases' do
+        it 'does not create any new databases or indices' do
           Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(Dir['./data/test/**/*.pstore']).to contain_exactly(
             "./data/test/uniq_store_1066.pstore",
             "./data/test/data_store_0.pstore",
             "./data/test/uniq_store_2014.pstore",
             "./data/test/state_map.pstore",
-          )
+            "./data/test/indices/DATE.pstore",
+            "./data/test/indices/PROVIDER.pstore",
+            "./data/test/indices/REV.pstore",
+            "./data/test/indices/STB.pstore",
+            "./data/test/indices/TITLE.pstore",
+            "./data/test/indices/VIEW_TIME.pstore")
         end
 
         it 'overwrites all existing data_store records with new ones' do
@@ -119,6 +140,17 @@ describe Ingester do
           Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(uniq_store_connection.keys.count).to eq(6)
           expect(uniq_store_connection.get("2014-04-02.stb3.dupe one")).to eq(14)
+        end
+
+        it 'overwrites the indices as-expected' do
+          Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
+          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].keys)
+            .to contain_exactly("the matrix",
+                                "unbreakable",
+                                "the hobbit",
+                                "dupe one",
+                                "not a dupe")
+          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(15,16)
         end
       end
     end

@@ -63,4 +63,17 @@ class PstoreConnection
       set(k, v)
     end
   end
+
+  def shovel(key, value) # upserts and takes single or array
+    store.transaction do |store|
+      store[key] = [store[key], value].flatten.compact
+    end
+  end
+
+  def delete_single_value_from_array(key:, value:)
+    store.transaction do |store|
+      store[key].delete(value)
+      store.delete(key) unless store[key].any?
+    end
+  end
 end
