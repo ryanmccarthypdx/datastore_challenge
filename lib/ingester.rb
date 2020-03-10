@@ -2,6 +2,7 @@ require_relative 'data_store'
 require_relative 'state_map'
 require_relative 'uniq_store'
 require 'csv'
+require_relative '../config/psv_headers'
 
 module Ingester
   class << self
@@ -17,6 +18,7 @@ module Ingester
     end
 
     def ingest(file_path)
+      raise("The header row in #{file_path} indicates an unexpected PSV format, aborting!") unless CSV.open(file_path, col_sep: "|", &:readline) == PSV_HEADERS
       CSV.foreach(file_path, headers: true, col_sep: "|") do |row|
         upsert_row(row)
       end
