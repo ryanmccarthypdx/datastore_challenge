@@ -15,7 +15,7 @@ describe Query do
         test_query = Query.new(argv)
         expect(test_query.selects).to eq(PSV_HEADERS[2..3])
         expect(test_query.orders).to eq(PSV_HEADERS[2..3].reverse)
-        expect(test_query.filters).to eq({'STB' => 'stb 01', 'DATE' => '202 0-03-11'})
+        expect(test_query.filters).to eq({'STB' => 'stb01', 'DATE' => '2020-03-11'})
       end
     end
 
