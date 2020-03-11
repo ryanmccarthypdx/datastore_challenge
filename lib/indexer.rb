@@ -1,4 +1,4 @@
-require 'pstore_connection'
+require_relative 'pstore_connection'
 
 module Indexer
   class << self
