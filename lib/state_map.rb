@@ -37,6 +37,18 @@ module StateMap # Small db, will only ever be one for a very long time
       convert_ranges_index_to_data_store_path(index)
     end
 
+    def map_data_stores_by_ids(ids)
+      data_store_id_ranges = connection.get(:data_store_id_ranges)
+      map = {}
+      data_store_id_ranges.each_with_index do |range, index|
+        matching_ids = ids.select{|id| range.include?(id)}
+        map[index] = matching_ids
+        ids -= matching_ids
+      end
+      map[data_store_id_ranges.count] = ids
+      map.transform_keys{|k| convert_ranges_index_to_data_store_path(k)}
+    end
+
     def find_uniq_store_from_compound_key(compound_key)
       # Unlike data store which can be built up serially to MAX_DATA_STORE_SIZE,
       # the decision about how to break up the uniq_store files needs to be
