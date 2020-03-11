@@ -50,4 +50,40 @@ describe DataStore do
       expect(Index).to have_received(:deindex_id).with(data: test_entry, id: test_id)
     end
   end
+
+  context 'bulk methods' do
+    before do
+      PstoreConnection.new('./data/test/data_store_0.pstore').set_multiple_in_single_transaction({1 => ['test', 'row', 'values', '1'], 2 => ['test', 'row', 'values', '2']})
+      PstoreConnection.new('./data/test/data_store_1.pstore').set_multiple_in_single_transaction({3 => ['test', 'row', 'values', '3'], 4 => ['test', 'row', 'values', '4']})
+    end
+    describe '.get_bulk' do
+      let(:test_filtered_ids) { [1,2,4] }
+      before do
+        allow(StateMap).to receive(:map_data_stores_by_ids)
+          .with(test_filtered_ids)
+          .and_return({
+            './data/test/data_store_0.pstore' => [1,2],
+            './data/test/data_store_1.pstore' => [4],
+            })
+      end
+
+      it 'looks up and returns the values as an array' do
+        expect(DataStore.get_bulk(test_filtered_ids)).to eq([['test', 'row', 'values', '1'], ['test', 'row', 'values', '2'], ['test', 'row', 'values', '4']])
+      end
+
+      context 'if one of the ids param has been deleted (unlikely race condition with an ingester)' do
+        before{ PstoreConnection.new('./data/test/data_store_0.pstore').delete(2) }
+        it "simply doesn't include that one in the output" do
+          expect(DataStore.get_bulk(test_filtered_ids)).to eq([['test', 'row', 'values', '1'], ['test', 'row', 'values', '4']])
+        end
+      end
+    end
+
+    describe '.get_all' do
+      before{ allow(StateMap).to receive(:all_data_store_paths).and_return(['./data/test/data_store_0.pstore', './data/test/data_store_1.pstore']) }
+      it 'returns all of the data store values in all data stores' do
+        expect(DataStore.get_all).to eq([['test', 'row', 'values', '1'], ['test', 'row', 'values', '2'], ['test', 'row', 'values', '3'], ['test', 'row', 'values', '4']])
+      end
+    end
+  end
 end

@@ -38,9 +38,21 @@ class PstoreConnection
     end
   end
 
+  def get_multiple_in_single_transaction(array)
+    store.transaction(true) do
+      array.map{|key| store[key]}.compact
+    end
+  end
+
   def keys
     store.transaction(true) do
       store.roots
+    end
+  end
+
+  def get_all_in_single_transaction
+    store.transaction(true) do
+      store.roots.map{|key| store[key]}
     end
   end
 

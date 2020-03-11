@@ -21,6 +21,25 @@ module DataStore
       delete_connection.delete(id)
     end
 
+    def get_bulk(filtered_ids)
+      data_store_id_map = StateMap.map_data_stores_by_ids(filtered_ids)
+      results = []
+      # TODO add concurrency here:
+      data_store_id_map.each_pair do |path, ids|
+        results << connection(path).get_multiple_in_single_transaction(ids)
+      end
+      results.flatten(1)
+    end
+
+    def get_all
+      results = []
+      # TODO add concurrency here:
+      StateMap.all_data_store_paths.each do |path|
+        results.concat(connection(path).get_all_in_single_transaction)
+      end
+      results
+    end
+
     private
 
     def shape_row_for_data_store(row)
