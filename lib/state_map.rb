@@ -1,6 +1,6 @@
 require_relative 'pstore_connection'
 
-module StateMap # Small db, will only ever be one for a very long time
+module StateMap # Small db, will only ever be one for a very long time; knows where everything is
   MAX_DATA_STORE_SIZE = 10000000 # bytes
 
   class << self
@@ -58,6 +58,14 @@ module StateMap # Small db, will only ever be one for a very long time
       else
         "./data/uniq_store_#{compound_key[0..3]}.pstore"
       end
+    end
+
+    def all_data_store_paths
+      paths = [convert_ranges_index_to_data_store_path(0)]
+      connection.get(:data_store_id_ranges).each_index do |i|
+        paths << convert_ranges_index_to_data_store_path(i + 1)
+      end
+      paths
     end
 
     private

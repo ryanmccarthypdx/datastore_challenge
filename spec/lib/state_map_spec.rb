@@ -129,6 +129,31 @@ describe StateMap do
     end
   end
 
+  describe '.all_data_store_paths' do
+    context 'when no data_stores have yet been closed yet' do # ie, default with fresh db
+      it 'returns an array containing only path to _0.pstore' do
+        expect(StateMap.all_data_store_paths).to eq(["./data/test/data_store_0.pstore"])
+      end
+    end
+
+    context 'when data_store_id_ranges have been set' do
+      before do
+        allow_any_instance_of(PstoreConnection).to receive(:get)
+          .with(:data_store_id_ranges)
+          .and_return([0...100, 100...200, 200...300])
+      end
+
+      it 'returns an array containing all pstore paths' do
+        expect(StateMap.all_data_store_paths).to eq([
+          "./data/test/data_store_0.pstore",
+          "./data/test/data_store_1.pstore",
+          "./data/test/data_store_2.pstore",
+          "./data/test/data_store_3.pstore"
+          ])
+      end
+    end
+  end
+
   describe 'find_uniq_store_from_compound_key' do
     it 'returns a path with the first four digits of the compound key as the file suffix' do
       expect(StateMap.find_uniq_store_from_compound_key("2020-03-09.xxx.xxx")).to eq("./data/test/uniq_store_2020.pstore")
