@@ -26,15 +26,23 @@ class Query
     end
   end
 
-    def set_selects(val)
-
+  def set_selects(val)
+    @selects = val.split(',')
+    @selects.each do |v|
+      raise QueryError, "#{v} is not a valid column!" unless PSV_HEADERS.include?(v)
     end
+  end
 
-    def set_orders(val)
-
+  def set_orders(val)
+    @orders = val.split(',')
+    @orders.each do |v|
+      raise QueryError, "#{v} is not a valid column!" unless PSV_HEADERS.include?(v)
     end
+  end
 
-    def add_to_filters(val)
-
-    end
+  def add_to_filters(val)
+    k, v = val.split('=')
+    raise QueryError, "#{k} is not a valid column!" unless PSV_HEADERS.include?(k)
+    (@filters ||= {})[k] = v
+  end
 end
