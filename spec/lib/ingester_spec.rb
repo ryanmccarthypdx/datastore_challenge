@@ -105,13 +105,13 @@ describe Ingester do
         end
 
         it 'populates the indices as-expected' do
-          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].keys)
+          expect(Index.connections_for_ingest[PSV_HEADERS.index("TITLE")].keys)
             .to contain_exactly("the matrix",
                                 "unbreakable",
                                 "the hobbit",
                                 "dupe one",
                                 "not a dupe")
-          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(7,8)
+          expect(Index.connections_for_ingest[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(7,8)
         end
       end
 
@@ -144,13 +144,13 @@ describe Ingester do
 
         it 'overwrites the indices as-expected' do
           Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
-          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].keys)
+          expect(Index.connections_for_ingest[PSV_HEADERS.index("TITLE")].keys)
             .to contain_exactly("the matrix",
                                 "unbreakable",
                                 "the hobbit",
                                 "dupe one",
                                 "not a dupe")
-          expect(Indexer.connections[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(15,16)
+          expect(Index.connections_for_ingest[PSV_HEADERS.index("TITLE")].get("not a dupe")).to contain_exactly(15,16)
         end
       end
     end

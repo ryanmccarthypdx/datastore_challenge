@@ -26,7 +26,7 @@ describe DataStore do
     end
 
     it 'indexes the row' do
-      expect(Indexer).to receive(:index_row).with(id: test_id, row: expected_values)
+      expect(Index).to receive(:index_row).with(id: test_id, row: expected_values)
       DataStore.create_new_record_from_row(id: test_id, row: test_row)
     end
   end
@@ -36,7 +36,7 @@ describe DataStore do
     before do
       allow(StateMap).to receive(:find_data_store_by_id).with(test_id).and_return(test_path)
       connection.set(test_id, test_entry)
-      allow(Indexer).to receive(:deindex).with(data: test_entry, id: test_id)
+      allow(Index).to receive(:deindex_id).with(data: test_entry, id: test_id)
     end
 
     it 'deletes the id' do
@@ -47,7 +47,7 @@ describe DataStore do
 
     it 'deindexes the data' do
       DataStore.delete(test_id)
-      expect(Indexer).to have_received(:deindex).with(data: test_entry, id: test_id)
+      expect(Index).to have_received(:deindex_id).with(data: test_entry, id: test_id)
     end
   end
 end
