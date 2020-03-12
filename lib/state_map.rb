@@ -1,7 +1,7 @@
 require_relative 'pstore_connection'
 
 class StateMap # Small table, will only ever be one for a very long time; knows where everything is
-  MAX_DATA_STORE_SIZE = 10000000 # bytes
+  MAX_DATA_STORE_SIZE = 100000 # bytes
   attr_accessor :connection
   def initialize
     @connection = PstoreConnection.new('./data/state_map.pstore', {

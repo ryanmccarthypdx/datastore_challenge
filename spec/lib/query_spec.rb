@@ -181,14 +181,27 @@ describe Query do
     context 'acceptance test' do
       before { Ingester.new('./spec/support/query_acceptance_test.psv').ingest }
 
-      it 'responds as-expected' do
+      it 'responds as-expected when passed argv' do
         result = Query.new(test_argv).perform
         expect(result).to eq([["stb7", "Absolution"], ["stb5", "Metropolis"]])
+      end
+
+      it 'responds as-expected when passed no args' do
+        expect(Query.new.perform).to eq([
+          ["stb1", "The Matrix", "warner bros", "2014-04-01", "4.00", "1:30"],
+          ["stb2", "Goldfinger", "buena vista", "2014-04-01", "4.00", "1:30"],
+          ["stb3", "Seabiscuit", "warner bros", "2014-04-01", "4.00", "1:30"],
+          ["stb4", "Zombieland", "buena vista", "2014-04-01", "4.00", "1:30"],
+          ["stb5", "Metropolis", "warner bros", "2020-03-11", "4.00", "1:30"],
+          ["stb6", "Goodfellas", "buena vista", "2020-03-11", "4.00", "1:30"],
+          ["stb7", "Absolution", "warner bros", "2020-03-11", "4.00", "1:30"],
+          ["stb8", "GoodBurger", "buena vista", "2020-03-11", "4.00", "1:30"]
+        ])
       end
     end
 
     it 'short circuits to empty array if filters produce no matches' do
-      allow(test_query.filters).to receive(:any?).and_return(true)
+      allow(test_query).to receive(:filters).and_return(true)
       allow(test_query).to receive(:fetch_with_filters).and_return([])
       expect(test_query.perform).to eq([])
     end

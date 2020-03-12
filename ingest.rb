@@ -16,4 +16,6 @@ unless Pathname.new(user_path).exist?
   return
 end
 
-Ingester.ingest(user_path)
+Ingester.new(user_path).ingest
+
+puts 'done!'

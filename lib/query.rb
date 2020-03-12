@@ -1,6 +1,7 @@
 require_relative '../config/psv_headers'
 require_relative 'index'
 require_relative 'data_store'
+require_relative 'state_map'
 
 class QueryError < StandardError; end
 
@@ -24,10 +25,10 @@ class Query
   end
 
   def perform
-    results = filters.any? ? fetch_with_filters : DataStore.get_all
+    results = filters ? fetch_with_filters : fetch_all
     return [] unless results.any?
-    apply_orders_in_place!(results) if orders.any?
-    apply_selects_in_place!(results) if selects.any?
+    apply_orders_in_place!(results) if orders
+    apply_selects_in_place!(results) if selects
     results
   end
 
@@ -63,6 +64,11 @@ class Query
     else
       []
     end
+  end
+
+  def fetch_all
+    all_paths = StateMap.new.all_data_store_paths
+    DataStore.get_all(all_paths)
   end
 
   def apply_orders_in_place!(results, order_array = @orders)
