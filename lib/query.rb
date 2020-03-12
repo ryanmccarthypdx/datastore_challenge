@@ -25,6 +25,14 @@ class Query
     end
   end
 
+  def perform
+    results = filters.any? ? fetch_with_filters : DataStore.get_all
+    return [] unless results.any?
+    apply_orders_in_place!(results) if orders.any?
+    apply_selects_in_place!(results) if selects.any?
+    results
+  end
+
   def set_selects(val)
     @selects = val.split(',')
     @selects.each do |v|

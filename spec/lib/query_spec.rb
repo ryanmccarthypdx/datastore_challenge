@@ -1,21 +1,25 @@
 require 'spec_helper'
 require 'query'
+require 'ingester'
 
 describe Query do
+  let(:test_argv) { [
+            '-s', PSV_HEADERS[2..3].join(','),
+            '-o', PSV_HEADERS[2..3].reverse.join(','),
+            '-s', PSV_HEADERS[0..1].join(','),
+            '-o', PSV_HEADERS[0..1].reverse.join(','),
+            '-f', 'PROVIDER=warner bros',
+            '-f', 'DATE=2020-03-11'
+          ] }
+  let(:test_query) { Query.new }
+
   describe '.initialize' do
     context 'acceptance test' do
       it 'should set all instance vars correctly if given query argvs' do
-        argv =  [ '-s', PSV_HEADERS[0..1].join(','),
-                  '-o', PSV_HEADERS[0..1].reverse.join(','),
-                  '-s', PSV_HEADERS[2..3].join(','),
-                  '-o', PSV_HEADERS[2..3].reverse.join(','),
-                  '-f', 'STB=stb01',
-                  '-f', 'DATE=2020-03-11'
-                ]
-        test_query = Query.new(argv)
-        expect(test_query.selects).to eq(PSV_HEADERS[2..3])
-        expect(test_query.orders).to eq(PSV_HEADERS[2..3].reverse)
-        expect(test_query.filters).to eq({'STB' => 'stb01', 'DATE' => '2020-03-11'})
+        test_query = Query.new(test_argv)
+        expect(test_query.selects).to eq(PSV_HEADERS[0..1])
+        expect(test_query.orders).to eq(PSV_HEADERS[0..1].reverse)
+        expect(test_query.filters).to eq({'PROVIDER' => 'warner bros', 'DATE' => '2020-03-11'})
       end
     end
 
@@ -43,9 +47,7 @@ describe Query do
     end
   end
 
-  context 'instance methods' do
-    let(:test_query) { Query.new }
-
+  context 'helper methods' do
     context 'initialize helpers' do
       describe '#set_selects' do
         it 'raises an error if passed a bad value' do
@@ -172,6 +174,23 @@ describe Query do
           expect(selected_results).to equal(test_input_results) # identity matcher
         end
       end
+    end
+  end
+
+  describe '#perform' do
+    context 'acceptance test' do
+      before { Ingester.ingest('./spec/support/query_acceptance_test.psv') }
+
+      it 'responds as-expected' do
+        result = Query.new(test_argv).perform
+        expect(result).to eq([["stb7", "Absolution"], ["stb5", "Metropolis"]])
+      end
+    end
+
+    it 'short circuits to empty array if filters are contradictory' do
+      allow(test_query).to receive(:filters).and_return({"DATE" => "2001-01-01", "DATE" => "2001-12-31"}) # illustrative purposes only; just need any? to be truthy
+      allow(test_query).to receive(:fetch_with_filters).and_return([])
+      expect(test_query.perform).to eq([])
     end
   end
 end
