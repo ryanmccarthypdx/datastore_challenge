@@ -22,7 +22,7 @@ describe UniqStore do
   end
 
   describe '.find_from_row' do
-    context 'when the row satisfies uniqueness criteria' do # default behavior with clean db
+    context 'when the row satisfies uniqueness criteria' do # default behavior with fresh db
       it 'returns nil' do
         expect(UniqStore.find_from_row(test_row_as_csv_row)).to be_nil
       end
@@ -43,7 +43,7 @@ describe UniqStore do
   describe '.upsert' do
     let(:test_new_id)  { 54321 }
 
-    context 'when the record does not exist' do # default on clean dbs
+    context 'when the record does not exist' do # default on fresh dbs
       it 'inserts the record' do
         expect(connection.get(expected_key)).to be_nil
         UniqStore.upsert(row: test_row_as_csv_row, new_id: test_new_id)

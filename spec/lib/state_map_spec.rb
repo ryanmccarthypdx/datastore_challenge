@@ -20,9 +20,9 @@ describe StateMap do
     context 'on subsequent connections' do
       it 'does not create a new database file' do
         StateMap.new
-        dbs_after_first_connection = Dir['./data/test/**/*.pstore']
+        tables_after_first_connection = Dir['./data/test/**/*.pstore']
         StateMap.new
-        expect(Dir['./data/test/**/*.pstore']).to eq(dbs_after_first_connection)
+        expect(Dir['./data/test/**/*.pstore']).to eq(tables_after_first_connection)
       end
     end
   end
@@ -45,13 +45,13 @@ describe StateMap do
           .and_return([0...100, 100...200, 200...300])
       end
 
-      it 'returns a db file path for the not-yet-closed id range' do
+      it 'returns a table file path for the not-yet-closed id range' do
         expect(test_state_map.data_store_for_new_record(301)).to eq("./data/test/data_store_3.pstore")
       end
     end
 
     context 'when a data_store has not yet been closed' do
-      it 'returns a db file path for _0.pstore' do # default behavior with fresh database
+      it 'returns a table file path for _0.pstore' do # default behavior with fresh database
         expect(test_state_map.data_store_for_new_record(1)).to eq("./data/test/data_store_0.pstore")
       end
     end

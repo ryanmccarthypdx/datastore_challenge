@@ -2,9 +2,7 @@ require_relative '../config/psv_headers'
 require_relative 'index'
 require_relative 'data_store'
 
-class QueryError < StandardError
-  # TODO: maybe add some --help text here?
-end
+class QueryError < StandardError; end
 
 class Query
   attr_accessor :selects, :orders, :filters

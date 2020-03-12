@@ -187,8 +187,8 @@ describe Query do
       end
     end
 
-    it 'short circuits to empty array if filters are contradictory' do
-      allow(test_query).to receive(:filters).and_return({"DATE" => "2001-01-01", "DATE" => "2001-12-31"}) # illustrative purposes only; just need any? to be truthy
+    it 'short circuits to empty array if filters produce no matches' do
+      allow(test_query.filters).to receive(:any?).and_return(true)
       allow(test_query).to receive(:fetch_with_filters).and_return([])
       expect(test_query.perform).to eq([])
     end

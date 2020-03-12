@@ -27,7 +27,7 @@ describe Ingester do
       before { valid_test_ingester.ingest }
 
       context 'first time it is run on a file' do
-        it 'creates the dbs and indices as-expected' do
+        it 'creates the tables and indices as-expected' do
           expect(Dir['./data/test/**/*.pstore']).to contain_exactly(
             "./data/test/uniq_store_1066.pstore",
             "./data/test/data_store_0.pstore",

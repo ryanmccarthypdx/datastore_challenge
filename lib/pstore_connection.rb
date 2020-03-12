@@ -11,7 +11,7 @@ class PstoreConnection
     unless Pathname.new(file_path).exist?
       FileUtils.touch(file_path)
       @store = PStore.new(file_path)
-      seed_db(init_hash)
+      seed_table(init_hash)
     else
       @store = PStore.new(file_path)
     end
@@ -70,7 +70,7 @@ class PstoreConnection
     end
   end
 
-  def seed_db(init_hash)
+  def seed_table(init_hash)
     init_hash.each_pair do |k,v|
       set(k, v)
     end
