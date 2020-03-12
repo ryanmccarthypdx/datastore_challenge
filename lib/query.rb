@@ -1,7 +1,6 @@
-require_relative 'data_store'
-require_relative 'state_map'
-require_relative 'uniq_store'
 require_relative '../config/psv_headers'
+require_relative 'index'
+require_relative 'data_store'
 
 class QueryError < StandardError
   # TODO: maybe add some --help text here?
@@ -44,5 +43,30 @@ class Query
     k, v = val.split('=')
     raise QueryError, "#{k} is not a valid column!" unless PSV_HEADERS.include?(k)
     (@filters ||= {})[k] = v
+  end
+
+  def fetch_with_filters(filter_hash = @filters)
+    index_results = []
+    filter_hash.each_pair do |column_name, index_key|
+      index_results << Index.fetch_ids(column_name: column_name, index_key: index_key)
+    end
+    filtered_ids = index_results.inject(:&)
+    filtered_ids.any? ? DataStore.get_bulk(filtered_ids) : []
+  end
+
+  def apply_orders_in_place!(results, order_array = @orders)
+    results.sort_by! do |result|
+      order_array.map do |column_name|
+        result[PSV_HEADERS.index(column_name)]
+      end
+    end
+  end
+
+  def apply_selects_in_place!(results, select_array = @selects)
+    results.map! do |r|
+      select_array.map do |column_name|
+        r[PSV_HEADERS.index(column_name)]
+      end
+    end
   end
 end
