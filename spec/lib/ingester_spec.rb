@@ -2,68 +2,29 @@ require 'spec_helper'
 require 'ingester'
 
 describe Ingester do
-  describe '.upsert_row' do
-    let(:test_row) { {test_key: "test_value"} }
-    let(:subject) { Ingester.upsert_row(test_row) }
-    before do
-      allow(StateMap).to receive(:increment_current_id).and_return(2)
-      allow(DataStore).to receive(:create_new_record_from_row).with(id: 2, row: test_row)
-      allow(UniqStore).to receive(:find_from_row).with(test_row).and_return(nil)
-      allow(DataStore).to receive(:delete)
-      allow(UniqStore).to receive(:upsert).with(new_id: 2, row: test_row)
+  let(:valid_path) { './spec/support/ingester_acceptance_test.psv' }
+  let(:valid_test_ingester) { Ingester.new(valid_path) }
+
+  describe '.initialize' do
+    it 'sets a new StateMap as @state_map' do
+      expect(valid_test_ingester.state_map).to be_a(StateMap)
     end
 
-    it 'requests that the StateMap increment the current id' do
-      subject
-      expect(StateMap).to have_received(:increment_current_id)
+    it 'sets the file path as @file_path' do
+      expect(valid_test_ingester.file_path).to eq(valid_path)
     end
 
-    it 'requests DataStore to recreate a new record with the id obtained from the StateMap' do
-      subject
-      expect(DataStore).to have_received(:create_new_record_from_row).with(id: 2, row: test_row)
-    end
-
-    it 'checks whether UniqStore already has a record' do
-      subject
-      expect(UniqStore).to have_received(:find_from_row).with(test_row)
-    end
-
-    context 'if a violating record is not found' do
-      it 'will not request any deletions' do
-        expect(DataStore).not_to have_received(:delete)
-      end
-    end
-
-    context 'if a violating record is found in UniqStore' do
-      before do
-        allow(UniqStore).to receive(:find_from_row).and_return(1)
-        allow(DataStore).to receive(:delete).with(1)
-      end
-
-      it 'requests that DataStore delete that record' do
-        subject
-        expect(DataStore).to have_received(:delete).with(1)
-      end
-    end
-
-    it 'creates upserts a UniqStore record with current_id' do
-      subject
-      expect(UniqStore).to have_received(:upsert).with(row: test_row, new_id: 2)
+    it 'raises an error if given a misformatted PSV' do
+      expect{ Ingester.new('./spec/support/malformed.psv') }.to raise_error(RuntimeError, 'The header row in ./spec/support/malformed.psv indicates an unexpected PSV format, aborting!')
     end
   end
 
-  describe '.ingest' do
-    context 'unit tests' do
-      it 'raises an error if it tries to ingest a misformatted PSV' do
-        expect{ Ingester.ingest('./spec/support/malformed.psv') }.to raise_error(RuntimeError, 'The header row in ./spec/support/malformed.psv indicates an unexpected PSV format, aborting!')
-      end
-    end
-
+  describe '#ingest' do
     context 'acceptance tests' do
-      let(:state_map_connection)  { StateMap.connection }
-      let(:data_store_connection) { DataStore.connection('./data/test/data_store_0.pstore') }
+      let(:state_map_connection)  { valid_test_ingester.state_map.connection }
+      let(:data_store_connection) { DataStore.new('./data/test/data_store_0.pstore').connection }
       let(:uniq_store_connection) { UniqStore.connection('./data/test/uniq_store_2014.pstore') }
-      before { Ingester.ingest('./spec/support/ingester_acceptance_test.psv') }
+      before { valid_test_ingester.ingest }
 
       context 'first time it is run on a file' do
         it 'creates the dbs and indices as-expected' do
@@ -116,8 +77,9 @@ describe Ingester do
       end
 
       context 'when run a second time' do
+        let(:second_run_ingester) { Ingester.new(valid_path) }
         it 'does not create any new databases or indices' do
-          Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
+          second_run_ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(Dir['./data/test/**/*.pstore']).to contain_exactly(
             "./data/test/uniq_store_1066.pstore",
             "./data/test/data_store_0.pstore",
@@ -132,18 +94,18 @@ describe Ingester do
         end
 
         it 'overwrites all existing data_store records with new ones' do
-          Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
+          second_run_ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(data_store_connection.keys).to eq([9, 10, 11, 12, 14, 15, 16])
         end
 
         it 'updates all of the uniq_store records' do
-          Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
+          second_run_ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(uniq_store_connection.keys.count).to eq(6)
           expect(uniq_store_connection.get("2014-04-02.stb3.dupe one")).to eq(14)
         end
 
         it 'overwrites the indices as-expected' do
-          Ingester.ingest('./spec/support/ingester_acceptance_test.psv')
+          second_run_ingester.ingest('./spec/support/ingester_acceptance_test.psv')
           expect(Index.connections_for_ingest[PSV_HEADERS.index("TITLE")].keys)
             .to contain_exactly("the matrix",
                                 "unbreakable",

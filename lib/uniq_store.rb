@@ -11,13 +11,13 @@ module UniqStore
 
     def find_from_row(row)
       compound_key = compound_key_from_row(row)
-      connection(StateMap.find_uniq_store_from_compound_key(compound_key))
+      connection(StateMap.new.find_uniq_store_from_compound_key(compound_key))
         .get(compound_key_from_row(row))
     end
 
     def upsert(row:, new_id:)
       compound_key = compound_key_from_row(row)
-      connection(StateMap.find_uniq_store_from_compound_key(compound_key))
+      connection(StateMap.new.find_uniq_store_from_compound_key(compound_key))
         .set(compound_key, new_id)
     end
 

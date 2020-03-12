@@ -1,27 +1,37 @@
 require_relative 'data_store'
 require_relative 'state_map'
 require_relative 'uniq_store'
-require 'csv'
 require_relative '../config/psv_headers'
+require 'csv'
+require 'pathname'
 
-module Ingester
-  class << self
-    def upsert_row(row)
-      id_to_upsert = StateMap.increment_current_id
-      DataStore.create_new_record_from_row(id: id_to_upsert, row: row)
+class Ingester
+  attr_accessor :state_map, :file_path
 
-      if id_to_delete = UniqStore.find_from_row(row)
-        DataStore.delete(id_to_delete)
-      end
+  def initialize(file_path)
+    raise("The header row in #{file_path} indicates an unexpected PSV format, aborting!") unless CSV.open(file_path, col_sep: "|", &:readline) == PSV_HEADERS
+    @file_path = file_path
+    @state_map = StateMap.new
+  end
 
-      UniqStore.upsert(row: row, new_id: id_to_upsert)
+  def ingest(file_path = @file_path)
+    CSV.foreach(file_path, headers: true, col_sep: "|") do |row|
+      upsert_row(row)
+    end
+  end
+
+  private
+
+  def upsert_row(row)
+    id_to_upsert = state_map.increment_current_id
+    data_store_path = state_map.data_store_for_new_record(id_to_upsert)
+    DataStore.new(data_store_path).create_new_record_from_row(id: id_to_upsert, row: row)
+
+    if id_to_delete = UniqStore.find_from_row(row)
+      delete_data_store_path = state_map.find_data_store_by_id(id_to_delete)
+      DataStore.new(delete_data_store_path).delete(id_to_delete)
     end
 
-    def ingest(file_path)
-      raise("The header row in #{file_path} indicates an unexpected PSV format, aborting!") unless CSV.open(file_path, col_sep: "|", &:readline) == PSV_HEADERS
-      CSV.foreach(file_path, headers: true, col_sep: "|") do |row|
-        upsert_row(row)
-      end
-    end
+    UniqStore.upsert(row: row, new_id: id_to_upsert)
   end
 end

@@ -59,7 +59,12 @@ class Query
       index_results << Index.fetch_ids(column_name: column_name, index_key: index_key)
     end
     filtered_ids = index_results.inject(:&)
-    filtered_ids.any? ? DataStore.get_bulk(filtered_ids) : []
+    if filtered_ids.any?
+      data_store_id_map = StateMap.new.map_data_stores_by_ids(filtered_ids)
+      DataStore.get_bulk(data_store_id_map)
+    else
+      []
+    end
   end
 
   def apply_orders_in_place!(results, order_array = @orders)

@@ -123,7 +123,7 @@ describe Query do
         end
 
         it 'requests that the DataStore get_all of the ids that match all filters' do
-          expect(DataStore).to receive(:get_bulk).with([3,4])
+          expect(DataStore).to receive(:get_bulk).with({"./data/test/data_store_0.pstore"=>[3, 4]})
           test_query.fetch_with_filters(test_filter_hash)
         end
       end
@@ -179,7 +179,7 @@ describe Query do
 
   describe '#perform' do
     context 'acceptance test' do
-      before { Ingester.ingest('./spec/support/query_acceptance_test.psv') }
+      before { Ingester.new('./spec/support/query_acceptance_test.psv').ingest }
 
       it 'responds as-expected' do
         result = Query.new(test_argv).perform
