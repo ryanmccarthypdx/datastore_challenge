@@ -58,9 +58,7 @@ class PstoreConnection
 
   def increment(key)
     store.transaction do
-      incremented_value = store[key] + 1
-      store[key] = incremented_value
-      incremented_value
+      store[key] += 1
     end
   end
 
@@ -84,8 +82,11 @@ class PstoreConnection
 
   def delete_single_value_from_array(key:, value:)
     store.transaction do |store|
-      store[key].delete(value)
-      store.delete(key) unless store[key].any?
+      if store[key] == [value]
+        store.delete(key)
+      else
+        store[key].delete(value)
+      end
     end
   end
 end
